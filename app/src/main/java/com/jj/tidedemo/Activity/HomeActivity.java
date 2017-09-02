@@ -1,10 +1,18 @@
 package com.jj.tidedemo.Activity;
 
-import android.app.Activity;
+import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.LinearLayout;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -14,17 +22,25 @@ import com.amap.api.maps.AMap;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.UiSettings;
+import com.jj.tidedemo.Fragment.ContentFragment;
 import com.jj.tidedemo.R;
 import com.jj.tidedemo.Utils.PermissionsHelper.PermissionsHelper;
 import com.jj.tidedemo.Utils.PermissionsHelper.permission.DangerousPermissions;
-import com.jj.tidedemo.View.MyTopBarView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import yalantis.com.sidemenu.interfaces.Resourceble;
+import yalantis.com.sidemenu.interfaces.ScreenShotable;
+import yalantis.com.sidemenu.model.SlideMenuItem;
+import yalantis.com.sidemenu.util.ViewAnimator;
 
 /**
  * Created by Administrator on 2016/12/13.
  */
 
-public class HomeActivity extends Activity implements LocationSource {
-
+public class HomeActivity extends AppCompatActivity implements LocationSource,ViewAnimator.ViewAnimatorListener {
+    //地图定位所使用到的变量
     private MapView mMapView;
     private AMap aMap;
     private OnLocationChangedListener mListener;
@@ -43,6 +59,14 @@ public class HomeActivity extends Activity implements LocationSource {
     private PermissionsHelper permissionsHelper;
     private String tag = "Permissions";
 
+    //第三方侧滑栏使用到的变量
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle drawerToggle;
+    private List<SlideMenuItem> list = new ArrayList<>();
+    private ContentFragment contentFragment;
+    private ViewAnimator viewAnimator;
+    private LinearLayout linearLayout;
+    private ContentFragment mContentReplaceFg;
 
     /*----------------------------获取权限-----------------------------------------------------------*/
     private void checkPermissions() {
@@ -96,7 +120,6 @@ public class HomeActivity extends Activity implements LocationSource {
         setContentView(R.layout.activity_home);
         //获得权限
         checkPermissions();
-
         //初始化数据
         initModel();
         //初始化UI
@@ -133,8 +156,8 @@ public class HomeActivity extends Activity implements LocationSource {
         mUiSettings = aMap.getUiSettings();//实例化UiSettings类
         mUiSettings.setMyLocationButtonEnabled(true);
 
-        /*************************************找到标题栏控件****************************************/
-        MyTopBarView my_topbar = (MyTopBarView) findViewById(R.id.my_topbar);
+        /*************************************找到标题栏控件*****************************************/
+        /*MyTopBarView my_topbar = (MyTopBarView) findViewById(R.id.my_topbar);
         my_topbar.setOnLeftAndRightBtnClickListener(new MyTopBarView.onLeftAndRightBtnClickListener() {
             @Override
             public void onLeftBtnClick() {
@@ -145,35 +168,176 @@ public class HomeActivity extends Activity implements LocationSource {
             public void onRightBtnClick() {
                 Toast.makeText(getApplicationContext(), "rightbtnclick", Toast.LENGTH_SHORT).show();
             }
+        });*/
+        /********************************初始化第三方侧滑栏******************************************/
+        //先生成一个透明的Fragment以供调用侧滑栏
+        contentFragment = ContentFragment.newInstance("TRANSPARENT");
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.content_frame, contentFragment)
+                .commit();
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerLayout.setScrimColor(Color.TRANSPARENT);
+        linearLayout = (LinearLayout) findViewById(R.id.left_drawer);
+        linearLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.closeDrawers();
+            }
         });
+
+        setActionBar();
+        createMenuList();
+        viewAnimator = new ViewAnimator<>(this, list, contentFragment, drawerLayout, this);
+    }
+
+    /********************************侧滑栏方法********************************************/
+    private void createMenuList() {
+        SlideMenuItem menuItem0 = new SlideMenuItem(ContentFragment.CLOSE, R.drawable.icn_close);
+        list.add(menuItem0);
+        SlideMenuItem menuItem = new SlideMenuItem(ContentFragment.BUILDING, R.drawable.icn_1);
+        list.add(menuItem);
+        SlideMenuItem menuItem2 = new SlideMenuItem(ContentFragment.BOOK, R.drawable.icn_2);
+        list.add(menuItem2);
+        SlideMenuItem menuItem3 = new SlideMenuItem(ContentFragment.PAINT, R.drawable.icn_3);
+        list.add(menuItem3);
+        SlideMenuItem menuItem4 = new SlideMenuItem(ContentFragment.CASE, R.drawable.icn_4);
+        list.add(menuItem4);
+        SlideMenuItem menuItem5 = new SlideMenuItem(ContentFragment.SHOP, R.drawable.icn_5);
+        list.add(menuItem5);
+        SlideMenuItem menuItem6 = new SlideMenuItem(ContentFragment.PARTY, R.drawable.icn_6);
+        list.add(menuItem6);
+        SlideMenuItem menuItem7 = new SlideMenuItem(ContentFragment.MOVIE, R.drawable.icn_7);
+        list.add(menuItem7);
+    }
+
+
+    private void setActionBar() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        drawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                drawerLayout,         /* DrawerLayout object */
+                toolbar,  /* nav drawer icon to replace 'Up' caret */
+                R.string.drawer_open,  /* "open drawer" description */
+                R.string.drawer_close  /* "close drawer" description */
+        ) {
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                linearLayout.removeAllViews();
+                linearLayout.invalidate();
+            }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                super.onDrawerSlide(drawerView, slideOffset);
+                if (slideOffset > 0.6 && linearLayout.getChildCount() == 0)
+                    viewAnimator.showMenuContent();
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+        };
+        drawerLayout.addDrawerListener(drawerToggle);
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //在activity执行onDestroy时执行mMapView.onDestroy()，实现地图生命周期管理
-        mMapView.onDestroy();
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        drawerToggle.syncState();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        //在activity执行onResume时执行mMapView.onResume ()，实现地图生命周期管理
-        mMapView.onResume();
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        drawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    //显示actionbar右侧的setting按钮
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        //在activity执行onPause时执行mMapView.onPause ()，实现地图生命周期管理
-        mMapView.onPause();
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (drawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        switch (item.getItemId()) {
+            //右侧菜单里得菜单项被点击
+            case R.id.action_settings:
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private ScreenShotable replaceFragment(android.support.v4.app.Fragment fragment, int topPosition) {
+        //圆形显示Fragment
+        /*View view = findViewById(R.id.content_frame);
+        int finalRadius = Math.max(view.getWidth(), view.getHeight());
+        SupportAnimator animator = ViewAnimationUtils.createCircularReveal(view, 0, topPosition, 0, finalRadius);
+        animator.setInterpolator(new AccelerateInterpolator());
+        animator.setDuration(ViewAnimator.CIRCULAR_REVEAL_ANIMATION_DURATION);
+
+        findViewById(R.id.content_overlay).setBackground(new BitmapDrawable(getResources(), screenShotable.getBitmap()));
+        animator.start();*/
+        getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment).commit();
+        return contentFragment;
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        //在activity执行onSaveInstanceState时执行mMapView.onSaveInstanceState (outState)，实现地图生命周期管理
-        mMapView.onSaveInstanceState(outState);
+    public ScreenShotable onSwitch(Resourceble slideMenuItem, ScreenShotable screenShotable, int position) {
+        //菜单项的监听器
+        switch (slideMenuItem.getName()) {
+            case ContentFragment.CLOSE:
+                return screenShotable;
+            case ContentFragment.BUILDING:
+                mContentReplaceFg = ContentFragment.newInstance(ContentFragment.BUILDING);
+                replaceFragment(mContentReplaceFg,position);
+                return screenShotable;
+            case ContentFragment.BOOK:
+                mContentReplaceFg = ContentFragment.newInstance(ContentFragment.BOOK);
+                replaceFragment(mContentReplaceFg,position);
+                return screenShotable;
+            case ContentFragment.PAINT:
+                mContentReplaceFg = ContentFragment.newInstance(ContentFragment.PAINT);
+                replaceFragment(mContentReplaceFg,position);
+                return screenShotable;
+            case ContentFragment.CASE:
+                mContentReplaceFg = ContentFragment.newInstance(ContentFragment.CASE);
+                replaceFragment(mContentReplaceFg,position);
+                return screenShotable;
+            default:
+                mContentReplaceFg = ContentFragment.newInstance(ContentFragment.BOOK);
+                replaceFragment(mContentReplaceFg,position);
+                return screenShotable;
+        }
+    }
+
+    @Override
+    public void disableHomeButton() {
+        getSupportActionBar().setHomeButtonEnabled(false);
+
+    }
+
+    @Override
+    public void enableHomeButton() {
+        getSupportActionBar().setHomeButtonEnabled(true);
+        drawerLayout.closeDrawers();
+
+    }
+
+    @Override
+    public void addViewToContainer(View view) {
+        linearLayout.addView(view);
     }
 
     //----------------------------------------定位--------------------------------------------------
@@ -222,5 +386,44 @@ public class HomeActivity extends Activity implements LocationSource {
             mlocationClient.onDestroy();
         }
         mlocationClient = null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //在activity执行onDestroy时执行mMapView.onDestroy()，实现地图生命周期管理
+        mMapView.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //在activity执行onResume时执行mMapView.onResume ()，实现地图生命周期管理
+        mMapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //在activity执行onPause时执行mMapView.onPause ()，实现地图生命周期管理
+        mMapView.onPause();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //在activity执行onSaveInstanceState时执行mMapView.onSaveInstanceState (outState)，实现地图生命周期管理
+        mMapView.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(getSupportFragmentManager().getBackStackEntryCount() == 0){
+            Log.i("Test","1111111");
+            super.onBackPressed();
+        }else{
+            Log.i("Test","2222222");
+            getSupportFragmentManager().popBackStack();
+        }
     }
 }
