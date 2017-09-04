@@ -3,21 +3,20 @@ package com.jj.tidedemo.Activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.support.v7.widget.SearchView;
 
 import com.amap.api.services.help.Inputtips;
 import com.amap.api.services.help.InputtipsQuery;
 import com.amap.api.services.help.Tip;
-import com.jj.tidedemo.R;
-
-import com.jj.tidedemo.Utils.Constants;
-import com.jj.tidedemo.Utils.ToastUtil;
 import com.jj.tidedemo.Adapter.InputTipsAdapter;
+import com.jj.tidedemo.R;
+import com.jj.tidedemo.Utils.ConstantValue;
+import com.jj.tidedemo.Utils.ToastUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +79,7 @@ public class InputTipsActivity extends Activity implements SearchView.OnQueryTex
         if (mCurrentTipList != null) {
             Tip tip = (Tip) adapterView.getItemAtPosition(i);
             Intent intent = new Intent();
-            intent.putExtra(Constants.EXTRA_TIP, tip);
+            intent.putExtra(ConstantValue.EXTRA_TIP, tip);
             setResult(HomeActivity.RESULT_CODE_INPUTTIPS, intent);
             this.finish();
         }
@@ -95,7 +94,7 @@ public class InputTipsActivity extends Activity implements SearchView.OnQueryTex
     @Override
     public boolean onQueryTextSubmit(String query) {
         Intent intent = new Intent();
-        intent.putExtra(Constants.KEY_WORDS_NAME, query);
+        intent.putExtra(ConstantValue.KEY_WORDS_NAME, query);
         setResult(HomeActivity.RESULT_CODE_KEYWORDS, intent);
         this.finish();
         return false;
@@ -110,7 +109,7 @@ public class InputTipsActivity extends Activity implements SearchView.OnQueryTex
     @Override
     public boolean onQueryTextChange(String newText) {
         if (!IsEmptyOrNullString(newText)) {
-            InputtipsQuery inputquery = new InputtipsQuery(newText, Constants.DEFAULT_CITY);
+            InputtipsQuery inputquery = new InputtipsQuery(newText, ConstantValue.DEFAULT_CITY);
             Inputtips inputTips = new Inputtips(InputTipsActivity.this.getApplicationContext(), inputquery);
             inputTips.setInputtipsListener(this);
             inputTips.requestInputtipsAsyn();

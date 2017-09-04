@@ -33,6 +33,7 @@ import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.UiSettings;
+import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
@@ -43,11 +44,14 @@ import com.amap.api.services.core.SuggestionCity;
 import com.amap.api.services.help.Tip;
 import com.amap.api.services.poisearch.PoiResult;
 import com.amap.api.services.poisearch.PoiSearch;
+import com.amap.api.services.route.DriveRouteResult;
+import com.amap.api.services.route.RouteSearch;
+import com.jj.tidedemo.Adapter.InfoWinAdapter;
 import com.jj.tidedemo.Fragment.ContentFragment;
 import com.jj.tidedemo.Interface.Resourceble;
 import com.jj.tidedemo.Overlay.PoiOverlay;
 import com.jj.tidedemo.R;
-import com.jj.tidedemo.Utils.Constants;
+import com.jj.tidedemo.Utils.ConstantValue;
 import com.jj.tidedemo.Utils.PermissionsHelper.PermissionsHelper;
 import com.jj.tidedemo.Utils.PermissionsHelper.permission.DangerousPermissions;
 import com.jj.tidedemo.Utils.ToastUtil;
@@ -65,7 +69,7 @@ import yalantis.com.sidemenu.interfaces.ScreenShotable;
  * Created by Administrator on 2016/12/13.
  */
 
-public class HomeActivity extends AppCompatActivity implements LocationSource, ViewAnimator.ViewAnimatorListener, AMap.OnMarkerClickListener, AMap.InfoWindowAdapter,
+public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickListener, LocationSource, ViewAnimator.ViewAnimatorListener, AMap.OnMarkerClickListener,
         PoiSearch.OnPoiSearchListener, View.OnClickListener {
     //地图定位所使用到的变量
     private MapView mMapView;
@@ -74,6 +78,10 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
     private AMapLocationClient mlocationClient;
     private AMapLocationClientOption mLocationOption;
     private UiSettings mUiSettings;//定义一个UiSettings对象
+    private double lat;
+    private double lon;
+    private boolean isFirstLoc = true;
+
 
     //地图搜索所使用到的变量
     private String mKeyWords = "";// 要输入的poi搜索关键字
@@ -86,10 +94,17 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
     private TextView mKeywordsTextView;
     private Marker mPoiMarker;
     private ImageView mCleanKeyWords;
+    private InfoWinAdapter adapter;
+    private Marker oldMarker;
 
     public static final int REQUEST_CODE = 100;
     public static final int RESULT_CODE_INPUTTIPS = 101;
     public static final int RESULT_CODE_KEYWORDS = 102;
+
+    //地图路径规划所用到的变量
+    private RouteSearch mRouteSearch;
+    private DriveRouteResult mDriveRouteResult;
+
 
     // app所需要的全部危险权限
     static final String[] PERMISSIONS = new String[]{
@@ -110,6 +125,7 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
     private LinearLayout linearLayout;
     private ContentFragment mContentReplaceFg;
     private ActionBar mSupportActionBar;
+    private String currentDistrict;
 
     /*----------------------------获取权限-----------------------------------------------------------*/
     private void checkPermissions() {
@@ -171,7 +187,7 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
         initSlideMenu();
     }
 
-    private void initSlideMenu(){
+    private void initSlideMenu() {
         /********************************初始化第三方侧滑栏******************************************/
         //先生成一个透明的Fragment以供调用侧滑栏
         mContentReplaceFg = ContentFragment.newInstance("TRANSPARENT");
@@ -193,7 +209,7 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
         viewAnimator = new ViewAnimator<>(this, list, mContentReplaceFg, drawerLayout, this);
     }
 
-    private void initMap(Bundle savedInstanceState){
+    private void initMap(Bundle savedInstanceState) {
         /******************************初始化地图***************************************************/
         mMapView = (MapView) findViewById(R.id.map);
         mMapView.onCreate(savedInstanceState);// 此方法必须重写
@@ -217,10 +233,10 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
         //初始化地图UI控件
         mUiSettings = aMap.getUiSettings();//实例化UiSettings类
         mUiSettings.setMyLocationButtonEnabled(true);
-        aMap.setTrafficEnabled(true);
+        //aMap.setTrafficEnabled(true);
 
         //搜索控件
-        mCleanKeyWords = (ImageView)findViewById(R.id.clean_keywords);
+        mCleanKeyWords = (ImageView) findViewById(R.id.clean_keywords);
         mCleanKeyWords.setOnClickListener(this);
         mKeyWords = "";
         mKeywordsTextView = (TextView) findViewById(R.id.main_keywords);
@@ -233,7 +249,9 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
      */
     private void setUpMap() {
         aMap.setOnMarkerClickListener(this);// 添加点击marker监听事件
-        aMap.setInfoWindowAdapter(this);// 添加显示infowindow监听事件
+        aMap.setOnMapClickListener(this);
+        adapter = new InfoWinAdapter(this);
+        aMap.setInfoWindowAdapter(adapter);// 添加显示infowindow监听事件
         aMap.getUiSettings().setRotateGesturesEnabled(false);
     }
 
@@ -257,7 +275,7 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
 
     /********************************侧滑栏方法********************************************/
     private void createMenuList() {
-        SlideMenuItem menuItem0 = new SlideMenuItem(ContentFragment.CLOSE, R.drawable.icn_close, "");
+        SlideMenuItem menuItem0 = new SlideMenuItem(ContentFragment.CLOSE, R.drawable.close, "");
         list.add(menuItem0);
         SlideMenuItem menuItem = new SlideMenuItem(ContentFragment.BUILDING, R.drawable.history, "停车历史");
         list.add(menuItem);
@@ -444,6 +462,15 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
                         if (amapLocation != null
                                 && amapLocation.getErrorCode() == 0) {
                             mListener.onLocationChanged(amapLocation);// 显示系统小蓝点
+                            lat = amapLocation.getLatitude();//获取纬度
+                            lon = amapLocation.getLongitude();//获取经度
+                            // 如果不设置标志位，此时再拖动地图时，它会不断将地图移动到当前的位置
+                            if (isFirstLoc) {
+                                //获取定位信息
+                                currentDistrict = amapLocation.getDistrict();
+                                aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 17));
+                                isFirstLoc = false;
+                            }
                         } else {
                             String errText = "定位失败," + amapLocation.getErrorCode() + ": " + amapLocation.getErrorInfo();
                             Log.e("AmapErr", errText);
@@ -541,7 +568,7 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
         showProgressDialog();// 显示进度框
         currentPage = 1;
         // 第一个参数表示搜索字符串，第二个参数表示poi搜索类型，第三个参数表示poi搜索区域（空字符串代表全国）
-        query = new PoiSearch.Query(keywords, "", Constants.DEFAULT_CITY);
+        query = new PoiSearch.Query(keywords, "", currentDistrict);
         // 设置每页最多返回多少条poiitem
         query.setPageSize(10);
         // 设置查第一页
@@ -555,24 +582,25 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
     @Override
     public boolean onMarkerClick(Marker marker) {
         marker.showInfoWindow();
+        aMap.moveCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
+        if (oldMarker != null) {
+            oldMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal));
+        }
+        oldMarker = marker;
+        marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.marker_select));
         return false;
     }
 
     @Override
-    public View getInfoContents(Marker marker) {
-        return null;
-    }
+    public void onMapClick(LatLng latLng) {
+        //点击地图上没marker 的地方，隐藏inforwindow
+        Log.i("Test", "1111111111111");
+        if (oldMarker != null) {
+            Log.i("Test", "2222222222222");
+            oldMarker.hideInfoWindow();
+            oldMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal));
+        }
 
-    @Override
-    public View getInfoWindow(final Marker marker) {
-        View view = getLayoutInflater().inflate(R.layout.poikeywordsearch_uri,
-                null);
-        TextView title = (TextView) view.findViewById(R.id.title);
-        title.setText(marker.getTitle());
-
-        TextView snippet = (TextView) view.findViewById(R.id.snippet);
-        snippet.setText(marker.getSnippet());
-        return view;
     }
 
     /**
@@ -649,24 +677,24 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
         if (resultCode == RESULT_CODE_INPUTTIPS && data
                 != null) {
             aMap.clear();
-            Tip tip = data.getParcelableExtra(Constants.EXTRA_TIP);
+            Tip tip = data.getParcelableExtra(ConstantValue.EXTRA_TIP);
             if (tip.getPoiID() == null || tip.getPoiID().equals("")) {
                 doSearchQuery(tip.getName());
             } else {
                 addTipMarker(tip);
             }
             mKeywordsTextView.setText(tip.getName());
-            if(!tip.getName().equals("")){
+            if (!tip.getName().equals("")) {
                 mCleanKeyWords.setVisibility(View.VISIBLE);
             }
         } else if (resultCode == RESULT_CODE_KEYWORDS && data != null) {
             aMap.clear();
-            String keywords = data.getStringExtra(Constants.KEY_WORDS_NAME);
-            if(keywords != null && !keywords.equals("")){
+            String keywords = data.getStringExtra(ConstantValue.KEY_WORDS_NAME);
+            if (keywords != null && !keywords.equals("")) {
                 doSearchQuery(keywords);
             }
             mKeywordsTextView.setText(keywords);
-            if(!keywords.equals("")){
+            if (!keywords.equals("")) {
                 mCleanKeyWords.setVisibility(View.VISIBLE);
             }
         }
@@ -686,11 +714,13 @@ public class HomeActivity extends AppCompatActivity implements LocationSource, V
         if (point != null) {
             LatLng markerPosition = new LatLng(point.getLatitude(), point.getLongitude());
             mPoiMarker.setPosition(markerPosition);
-            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 17));
+            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 16));
         }
         mPoiMarker.setTitle(tip.getName());
         mPoiMarker.setSnippet(tip.getAddress());
+        mPoiMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal));
     }
+
 
     /**
      * 点击事件回调方法

@@ -4,4 +4,7 @@
     <string name="drawer_open">Open</string>
     <string name="drawer_close">Close</string>
     <string name="no_result">对不起，没有搜索到相关数据！</string>
+    <string name="infowindow_navigation">导航</string>
+    <string name="infowindow_call">电话</string>
+    <string name="agent_addr">地址：%1$s</string>
 </resources>

@@ -27,7 +27,7 @@ import yalantis.com.sidemenu.interfaces.ScreenShotable;
  */
 public class ViewAnimator<T extends Resourceble> {
     private final int ANIMATION_DURATION = 175;
-    public static final int CIRCULAR_REVEAL_ANIMATION_DURATION = 800;
+    public static final int CIRCULAR_REVEAL_ANIMATION_DURATION = 750;
 
     private AppCompatActivity appCompatActivity;
     private List<T> list;

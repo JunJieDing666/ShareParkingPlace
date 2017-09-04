@@ -43,7 +43,7 @@
             android:layout_height="match_parent"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="50dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginTop="58dp"
             android:background="@android:color/transparent">
 
             <ImageView
@@ -53,8 +53,8 @@
                 android:layout_alignParentRight="true"
                 android:src="@mipmap/ic_close"
                 android:visibility="gone"
-                android:layout_alignParentBottom="true"
-                android:background="@color/white"
+                android:layout_alignParentTop="true"
+                android:background="@color/colorItemUp"
                 />
 
             <TextView
@@ -62,7 +62,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_toLeftOf="@+id/clean_keywords"
-                android:layout_alignParentBottom="true"
+                android:layout_alignParentTop="true"
                 android:clickable="true"
                 android:completionThreshold="1"
                 android:drawableLeft="@mipmap/ic_search"
@@ -77,9 +77,23 @@
                 android:textColorHint="@color/text_hint"
                 android:textSize="16.0sp"
                 android:maxLines="1"
-                android:background="@color/white" />
+                android:background="#e6e6e6" />
+
+            <Button
+                android:id="@+id/rent_btn"
+                android:layout_width="220dp"
+                android:layout_height="48dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="20dp"
+                android:layout_centerHorizontal="true"
+                android:background="#4d90d4"
+                android:text="出租车位"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="15sp"/>
 
         </RelativeLayout>
+
 
         <LinearLayout
             android:id="@+id/content_overlay"
