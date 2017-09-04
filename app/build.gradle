@@ -7,6 +7,7 @@ repositories {
 android {
     compileSdkVersion 23
     buildToolsVersion '25.0.0'
+
     defaultConfig {
         applicationId "com.jj.tidedemo"
         minSdkVersion 17
@@ -33,5 +34,11 @@ dependencies {
     compile 'com.github.ozodrukh:CircularReveal:1.0.4'
     testCompile 'junit:junit:4.12'
     compile files('libs/xUtils-2.6.14.jar')
-    compile files('libs/AMap3DMap_4.1.3_AMapNavi_1.9.4_AMapSearch_3.6.1_AMapLocation_3.2.0_20161208.jar')
+    //3D地图so及jar
+    compile 'com.amap.api:3dmap:latest.integration'
+    //定位功能
+    compile 'com.amap.api:location:latest.integration'
+    //搜索功能
+    compile 'com.amap.api:search:latest.integration'
+
 }

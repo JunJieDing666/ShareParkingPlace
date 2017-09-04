@@ -9,11 +9,13 @@ import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.jj.tidedemo.R;
 
@@ -59,7 +61,7 @@ public class ContentFragment extends Fragment implements ScreenShotable {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        switch (res){
+        switch (res) {
             case ContentFragment.BUILDING:
                 mRootView = inflater.inflate(R.layout.fragment_parking_his, container, false);
                 return mRootView;
@@ -79,6 +81,31 @@ public class ContentFragment extends Fragment implements ScreenShotable {
             default:
                 mRootView = inflater.inflate(R.layout.fragment_home, container, false);
                 return mRootView;
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        switch (res) {
+            //在此声明各个fragment对应布局上的控件方法
+            case ContentFragment.BUILDING:
+                return;
+            case ContentFragment.BOOK:
+                Button btn = (Button) getActivity().findViewById(R.id.btn_test);
+                btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(getActivity(), "You have click this button.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return;
+            case ContentFragment.PAINT:
+                return;
+            case ContentFragment.CASE:
+                return;
+            default:
+                return;
         }
     }
 

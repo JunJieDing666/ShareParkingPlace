@@ -7,24 +7,27 @@
         android:id="@+id/top_bar_title"
         android:layout_width="match_parent"
         android:layout_height="45dp"
-        android:background="#f7b4b4"
+        android:background="@android:color/transparent"
         android:gravity="center"
         android:text="我的标题栏"
         android:textSize="18sp" />
 
-    <Button
+    <ImageButton
         android:id="@+id/top_bar_left_btn"
-        android:background="@drawable/ic_launcher"
-        android:layout_width="40dp"
-        android:layout_height="35dp"
-        android:layout_margin="5dp" />
+        android:background="@drawable/personal_center"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"/>
 
-    <Button
+    <ImageButton
         android:id="@+id/top_bar_right_btn"
-        android:background="@drawable/ic_launcher"
-        android:layout_width="40dp"
-        android:layout_height="35dp"
+        android:background="@drawable/personal_center"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:layout_alignParentRight="true"
-        android:layout_margin="5dp" />
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="12.5dp" />
+
 
 </RelativeLayout>

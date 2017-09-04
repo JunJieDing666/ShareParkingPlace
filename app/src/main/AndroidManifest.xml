@@ -38,6 +38,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".Activity.HomeActivity" />
+        <activity android:name=".Activity.InputTipsActivity"/>
+        <activity android:name=".Activity.PersonalInfoActivity"/>
 
         <meta-data
             android:name="com.amap.api.v2.apikey"
