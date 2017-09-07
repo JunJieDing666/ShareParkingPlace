@@ -46,39 +46,44 @@
             android:layout_marginTop="58dp"
             android:background="@android:color/transparent">
 
-            <ImageView
-                android:id="@+id/clean_keywords"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_alignParentRight="true"
-                android:src="@mipmap/ic_close"
-                android:visibility="gone"
-                android:layout_alignParentTop="true"
-                android:background="@color/colorItemUp"
-                />
-
-            <TextView
-                android:id="@+id/main_keywords"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_toLeftOf="@+id/clean_keywords"
-                android:layout_alignParentTop="true"
-                android:clickable="true"
-                android:completionThreshold="1"
-                android:drawableLeft="@mipmap/ic_search"
-                android:dropDownVerticalOffset="1.0dip"
-                android:gravity="center_vertical"
-                android:hint="关键字搜索"
-                android:imeOptions="actionDone"
-                android:inputType="text|textAutoComplete"
-                android:maxLength="20"
-                android:paddingLeft="10dp"
-                android:textColor="#000000"
-                android:textColorHint="@color/text_hint"
-                android:textSize="16.0sp"
-                android:maxLines="1"
-                android:background="#e6e6e6" />
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_layout_shape"
+                android:paddingRight="5dp">
+                <ImageView
+                    android:id="@+id/clean_keywords"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:layout_alignParentRight="true"
+                    android:src="@mipmap/ic_close"
+                    android:visibility="gone"
+                    android:layout_alignParentTop="true"
+                    />
 
+                <TextView
+                    android:id="@+id/main_keywords"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_toLeftOf="@+id/clean_keywords"
+                    android:layout_alignParentTop="true"
+                    android:clickable="true"
+                    android:completionThreshold="1"
+                    android:drawableLeft="@mipmap/ic_search"
+                    android:dropDownVerticalOffset="1.0dip"
+                    android:gravity="center_vertical"
+                    android:hint="关键字搜索"
+                    android:imeOptions="actionDone"
+                    android:inputType="text|textAutoComplete"
+                    android:maxLength="20"
+                    android:paddingLeft="10dp"
+                    android:textColor="#000000"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="16.0sp"
+                    android:maxLines="1" />
+
+
+            </RelativeLayout>
             <Button
                 android:id="@+id/rent_btn"
                 android:layout_width="220dp"
@@ -86,7 +91,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginBottom="20dp"
                 android:layout_centerHorizontal="true"
-                android:background="#4d90d4"
+                android:background="@color/blue"
                 android:text="出租车位"
                 android:textAlignment="center"
                 android:textColor="@color/white"

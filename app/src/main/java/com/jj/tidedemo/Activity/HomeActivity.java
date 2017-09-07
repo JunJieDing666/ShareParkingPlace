@@ -1,11 +1,15 @@
 package com.jj.tidedemo.Activity;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
@@ -13,16 +17,20 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.Handler;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -41,26 +49,35 @@ import com.amap.api.maps.model.MyLocationStyle;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.core.SuggestionCity;
+import com.amap.api.services.geocoder.GeocodeAddress;
+import com.amap.api.services.geocoder.GeocodeQuery;
+import com.amap.api.services.geocoder.GeocodeResult;
+import com.amap.api.services.geocoder.GeocodeSearch;
+import com.amap.api.services.geocoder.RegeocodeResult;
 import com.amap.api.services.help.Tip;
 import com.amap.api.services.poisearch.PoiResult;
 import com.amap.api.services.poisearch.PoiSearch;
-import com.amap.api.services.route.DriveRouteResult;
-import com.amap.api.services.route.RouteSearch;
 import com.jj.tidedemo.Adapter.InfoWinAdapter;
 import com.jj.tidedemo.Fragment.ContentFragment;
 import com.jj.tidedemo.Interface.Resourceble;
 import com.jj.tidedemo.Overlay.PoiOverlay;
 import com.jj.tidedemo.R;
 import com.jj.tidedemo.Utils.ConstantValue;
+import com.jj.tidedemo.Utils.Md5Utils;
 import com.jj.tidedemo.Utils.PermissionsHelper.PermissionsHelper;
 import com.jj.tidedemo.Utils.PermissionsHelper.permission.DangerousPermissions;
+import com.jj.tidedemo.Utils.SpUtils;
 import com.jj.tidedemo.Utils.ToastUtil;
 import com.jj.tidedemo.Utils.ViewAnimator;
 import com.jj.tidedemo.View.SlideMenuItem;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import cn.smssdk.EventHandler;
+import cn.smssdk.SMSSDK;
+import cn.smssdk.gui.RegisterPage;
 import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
 import yalantis.com.sidemenu.interfaces.ScreenShotable;
@@ -69,8 +86,10 @@ import yalantis.com.sidemenu.interfaces.ScreenShotable;
  * Created by Administrator on 2016/12/13.
  */
 
-public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickListener, LocationSource, ViewAnimator.ViewAnimatorListener, AMap.OnMarkerClickListener,
-        PoiSearch.OnPoiSearchListener, View.OnClickListener {
+public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickListener, LocationSource,
+        ViewAnimator.ViewAnimatorListener, AMap.OnMarkerClickListener, PoiSearch.OnPoiSearchListener,
+        View.OnClickListener, GeocodeSearch.OnGeocodeSearchListener {
+    private static final int REQUEST_RENT = 0;
     //地图定位所使用到的变量
     private MapView mMapView;
     private AMap aMap;
@@ -101,11 +120,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
     public static final int RESULT_CODE_INPUTTIPS = 101;
     public static final int RESULT_CODE_KEYWORDS = 102;
 
-    //地图路径规划所用到的变量
-    private RouteSearch mRouteSearch;
-    private DriveRouteResult mDriveRouteResult;
-
-
     // app所需要的全部危险权限
     static final String[] PERMISSIONS = new String[]{
             DangerousPermissions.LOCATION,
@@ -126,6 +140,30 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
     private ContentFragment mContentReplaceFg;
     private ActionBar mSupportActionBar;
     private String currentDistrict;
+    private String currentCity;
+
+    //短信验证所用到的变量
+    private EventHandler eventHandler;
+    private String userPhoneCountry;
+    private String userPhoneNum;
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 1:
+                    Toast.makeText(HomeActivity.this, (String) msg.obj, Toast.LENGTH_SHORT).show();
+                    break;
+                case 2:
+                    // 验证成功后处理你自己的逻辑
+                    //设置用户密码
+                    showSetPsdDialog(HomeActivity.this);
+                    break;
+            }
+        }
+    };
+    private Button mRentBtn;
+    private GeocodeSearch geocodeSearch;
+    private Marker geoMarker;
 
     /*----------------------------获取权限-----------------------------------------------------------*/
     private void checkPermissions() {
@@ -185,6 +223,81 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         initMap(savedInstanceState);
         //初始化侧滑栏
         initSlideMenu();
+        //初始化短信验证
+        initSMSSDK();
+    }
+
+    private void initSMSSDK() {
+        // 创建EventHandler对象
+        eventHandler = new EventHandler() {
+            public void afterEvent(int event, int result, Object data) {
+                if (data instanceof Throwable) {
+                    Throwable throwable = (Throwable) data;
+                    String msg = throwable.getMessage();
+                    Message message = new Message();
+                    message.obj = msg;
+                    message.what = 1;
+                    handler.sendMessage(message);
+                } else {
+                    if (event == SMSSDK.EVENT_GET_VERIFICATION_CODE) {
+                        Message message = new Message();
+                        message.what = 2;
+                        handler.sendMessage(message);
+                    }
+                }
+            }
+        };
+        // 注册监听器
+        SMSSDK.registerEventHandler(eventHandler);
+    }
+
+    private void showSetPsdDialog(Context ctx) {
+        //创建对话框
+        final AlertDialog dialog = new AlertDialog.Builder(ctx).create();
+        //因为对话框的样式需要自己设定，所以调用setView()方法
+        final View view = View.inflate(ctx, R.layout.dialog_set_psd, null);
+        dialog.setView(view);
+        dialog.show();
+
+        //设置对话框按钮的点击事件
+        Button bt_submit = (Button) view.findViewById(R.id.bt_submit);
+        Button bt_cancel = (Button) view.findViewById(R.id.bt_cancel);
+
+        //确认键的点击事件
+        bt_submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText et_set_psd = (EditText) view.findViewById(R.id.et_set_psd);
+                EditText et_confirm_psd = (EditText) view.findViewById(R.id.et_confirm_psd);
+
+                String psd = et_set_psd.getText().toString();
+                String confirmPsd = et_confirm_psd.getText().toString();
+
+                if (!TextUtils.isEmpty(psd) && !TextUtils.isEmpty(confirmPsd)) {
+                    if (psd.equals(confirmPsd)) {
+                        //防止按返回键后对话框还在，需要解散对话框
+                        dialog.dismiss();
+                        //将用户设置的密码存储在sp中
+                        SpUtils.putString(getApplicationContext(), ConstantValue.DEFENSE_PSD, Md5Utils.encode(psd));
+                    } else {
+                        Toast.makeText(getApplicationContext(), "确认密码错误", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    //弹出吐司指出错误
+                    Toast.makeText(getApplicationContext(), "请输入密码", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+
+        //取消键的点击事件
+        bt_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
     }
 
     private void initSlideMenu() {
@@ -241,7 +354,14 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         mKeyWords = "";
         mKeywordsTextView = (TextView) findViewById(R.id.main_keywords);
         mKeywordsTextView.setOnClickListener(this);
+        mRentBtn = (Button) findViewById(R.id.rent_btn);
+        mRentBtn.setOnClickListener(this);
 
+        //反向地理编码
+        geocodeSearch = new GeocodeSearch(this);
+        geocodeSearch.setOnGeocodeSearchListener(this);
+        geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal)));
     }
 
     /**
@@ -285,12 +405,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         list.add(menuItem3);
         SlideMenuItem menuItem4 = new SlideMenuItem(ContentFragment.CASE, R.drawable.set, "设置");
         list.add(menuItem4);
-        SlideMenuItem menuItem5 = new SlideMenuItem(ContentFragment.SHOP, R.drawable.icn_5, "测试1");
-        list.add(menuItem5);
-        SlideMenuItem menuItem6 = new SlideMenuItem(ContentFragment.PARTY, R.drawable.icn_6, "测试2");
-        list.add(menuItem6);
-        SlideMenuItem menuItem7 = new SlideMenuItem(ContentFragment.MOVIE, R.drawable.icn_7, "测试3");
-        list.add(menuItem7);
     }
 
 
@@ -314,7 +428,31 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         rightBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "rightbtnclick", Toast.LENGTH_SHORT).show();
+                //判断sp是否有用户注册的手机号
+                String spUserPhone = SpUtils.getString(getApplicationContext(), ConstantValue.USER_PHONE_NUM, "");
+                //如果应用没有记录过用户手机号则进入注册页面
+                if (TextUtils.isEmpty(spUserPhone)) {
+                    RegisterPage registerPage = new RegisterPage();
+                    registerPage.setRegisterCallback(new EventHandler() {
+                        public void afterEvent(int event, int result, Object data) {
+                            // 解析注册结果
+                            if (result == SMSSDK.RESULT_COMPLETE) {
+                                @SuppressWarnings("unchecked")
+                                HashMap<String, Object> phoneMap = (HashMap<String, Object>) data;
+                                userPhoneCountry = (String) phoneMap.get("country");
+                                userPhoneNum = (String) phoneMap.get("phone");
+                                //验证成功后把记录用户号码
+                                SpUtils.putString(getApplicationContext(), ConstantValue.USER_PHONE_NUM, userPhoneNum);
+                            }
+                        }
+                    });
+                    registerPage.show(getApplicationContext());
+                } else {
+                    //否则直接进入用户界面（暂时未做密码登录）
+                    Intent userIntent = new Intent(getApplicationContext(), PersonalInfoActivity.class);
+                    userIntent.putExtra("phone", spUserPhone);
+                    startActivity(userIntent);
+                }
             }
         });
         drawerToggle = new ActionBarDrawerToggle(
@@ -468,6 +606,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                             if (isFirstLoc) {
                                 //获取定位信息
                                 currentDistrict = amapLocation.getDistrict();
+                                currentCity = amapLocation.getCity();
                                 aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 17));
                                 isFirstLoc = false;
                             }
@@ -506,6 +645,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         super.onDestroy();
         //在activity执行onDestroy时执行mMapView.onDestroy()，实现地图生命周期管理
         mMapView.onDestroy();
+        SMSSDK.unregisterEventHandler(eventHandler);
     }
 
     @Override
@@ -594,9 +734,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
     @Override
     public void onMapClick(LatLng latLng) {
         //点击地图上没marker 的地方，隐藏inforwindow
-        Log.i("Test", "1111111111111");
         if (oldMarker != null) {
-            Log.i("Test", "2222222222222");
             oldMarker.hideInfoWindow();
             oldMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal));
         }
@@ -697,6 +835,16 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             if (!keywords.equals("")) {
                 mCleanKeyWords.setVisibility(View.VISIBLE);
             }
+        } else if (requestCode == REQUEST_RENT && resultCode == RESULT_OK) {
+            if (geoMarker.getPosition() != null) {
+                geoMarker.hideInfoWindow();
+            }
+            String parkAddr = data.getExtras().getString("park_addr");
+            String start_time = data.getExtras().getString("start_time");
+            String end_time = data.getExtras().getString("end_time");
+            GeocodeQuery geocodeQuery = new GeocodeQuery(parkAddr, currentCity);
+            geocodeSearch.getFromLocationNameAsyn(geocodeQuery);
+            geoMarker.setSnippet(parkAddr+"\n开始时间："+start_time+"\n结束时间："+end_time);
         }
     }
 
@@ -736,8 +884,44 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 mKeywordsTextView.setText("");
                 aMap.clear();
                 mCleanKeyWords.setVisibility(View.GONE);
+                break;
+            case R.id.rent_btn:
+                Intent rentIntent = new Intent(HomeActivity.this, RentActivity.class);
+                startActivityForResult(rentIntent, REQUEST_RENT);
             default:
                 break;
+        }
+    }
+
+    @Override
+    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
+
+    }
+
+    @Override
+    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+        //解析坐标
+        if (i == 1000) {
+            if (geocodeResult != null && geocodeResult.getGeocodeAddressList() != null
+                    && geocodeResult.getGeocodeAddressList().size() > 0) {
+                //获取首个地址
+                GeocodeAddress address = geocodeResult.getGeocodeAddressList().get(0);
+                //转化为经纬度，并包装起来
+                LatLonPoint latLonPoint = address.getLatLonPoint();
+                LatLng markerPosition = new LatLng(latLonPoint.getLatitude(), latLonPoint.getLongitude());
+                aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 15));
+                //设置点标记
+                geoMarker.setPosition(markerPosition);
+                geoMarker.setTitle("车位出租");
+                //弹出具体位置信息
+                String addressName = "经纬度值:" + address.getLatLonPoint() + "\n位置描述:"
+                        + address.getFormatAddress();
+                ToastUtil.show(this, addressName);
+            } else {
+                ToastUtil.show(this, "没有查询到结果！");
+            }
+        } else {
+            ToastUtil.showerror(this, i);
         }
     }
 }

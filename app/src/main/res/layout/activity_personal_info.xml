@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F3F6"
+    android:orientation="vertical">
+
+    <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/profile_image"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="40dp"
+        android:src="@drawable/content_music"
+        app:civ_border_color="@color/border_clo"
+        app:civ_border_width="0.5dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="30dp"
+        android:text="头像"
+        android:textColor="#c7c7c7" />
+
+    <LinearLayout style="@style/wrap_layout">
+        <!-- 上圆角-->
+        <LinearLayout
+            style="@style/top_layout"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <TextView
+                style="@style/usertext"
+                android:layout_weight="0.2"
+                android:text="姓名" />
+
+            <TextView
+                style="@style/usertext"
+                android:layout_weight="0.8"
+                android:text="丁俊杰" />
+
+            <ImageView style="@style/img_arrow" />
+        </LinearLayout>
+
+        <!-- 分割线 -->
+        <View style="@style/bg_line" />
+        <!-- 无圆角-->
+        <LinearLayout
+            style="@style/mid_layout"
+            android:weightSum="1">
+
+            <TextView
+                style="@style/usertext"
+                android:layout_weight="0.2"
+                android:text="性别" />
+
+            <TextView
+                style="@style/usertext"
+                android:layout_weight="0.8"
+                android:text="男" />
+
+            <ImageView style="@style/img_arrow" />
+        </LinearLayout>
+
+        <View style="@style/bg_line" />
+        <!-- 下圆角-->
+        <LinearLayout
+            style="@style/bottom_layout"
+            android:weightSum="1"
+            android:id="@+id/ll_user_phone_num">
+
+            <TextView
+                style="@style/usertext"
+                android:layout_weight="0.2"
+                android:text="手机号" />
+
+            <TextView
+                android:id="@+id/user_phone_num"
+                style="@style/usertext"
+                android:layout_weight="0.8"
+                android:text="18205159087" />
+
+            <ImageView style="@style/img_arrow" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <!-- 全圆角-->
+    <LinearLayout style="@style/wrap_layout">
+
+        <LinearLayout
+            style="@style/single_layout"
+            android:weightSum="1"
+            android:id="@+id/ll_user_plate_num">
+
+            <TextView
+                style="@style/usertext"
+                android:layout_weight="0.2"
+                android:text="车牌号" />
+
+            <TextView
+                android:id="@+id/user_plate_num"
+                style="@style/usertext"
+                android:layout_weight="0.8"
+                android:text="苏AQQ360" />
+
+            <ImageView style="@style/img_arrow" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

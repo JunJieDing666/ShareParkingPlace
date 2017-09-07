@@ -2,12 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="wrap_content"
-    android:layout_height="127dp"
+    android:layout_height="145dp"
     android:background="#0000"
     >
     <LinearLayout
-        android:layout_width="209dp"
-        android:layout_height="127dp"
+        android:layout_width="210dp"
+        android:layout_height="145dp"
         android:orientation="vertical"
         android:background="@drawable/inforwindow_bg">
 
@@ -27,9 +27,9 @@
             android:layout_marginRight="14dp"
             android:layout_marginTop="2dp"
             android:layout_width="match_parent"
-            android:layout_height="34dp"
+            android:layout_height="50dp"
             android:textSize="12sp"
-            android:lines="2"
+            android:lines="4"
             android:ellipsize="end"
             android:textColor="@color/black_text2"/>
 
@@ -76,7 +76,7 @@
 
             <LinearLayout
                 android:layout_marginTop="9dp"
-                android:id="@+id/call_LL"
+                android:id="@+id/rent_LL"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
@@ -87,12 +87,12 @@
                     android:layout_width="19dp"
                     android:layout_height="18dp"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/inforwindow_call"/>
+                    android:src="@drawable/check_info"/>
                 <TextView
                     android:layout_marginLeft="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/infowindow_call"
+                    android:text="@string/infowindow_rent"
                     android:textSize="14sp"
                     android:textColor="@color/black_text"/>
             </LinearLayout>

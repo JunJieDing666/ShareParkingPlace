@@ -1,6 +1,7 @@
 package com.jj.tidedemo.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +20,7 @@ import com.jj.tidedemo.R;
 public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListener {
     private Context mContext;
     private LatLng latLng;
-    private LinearLayout call;
+    private LinearLayout rent;
     private LinearLayout navigation;
     private TextView nameTV;
     private String agentName;
@@ -52,7 +53,7 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
     private View initView() {
         View view = LayoutInflater.from(mContext).inflate(R.layout.poikeywordsearch_uri, null);
         navigation = (LinearLayout) view.findViewById(R.id.navigation_LL);
-        call = (LinearLayout) view.findViewById(R.id.call_LL);
+        rent = (LinearLayout) view.findViewById(R.id.rent_LL);
         nameTV = (TextView) view.findViewById(R.id.name);
         addrTV = (TextView) view.findViewById(R.id.addr);
 
@@ -60,7 +61,7 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
         addrTV.setText(String.format(mContext.getString(R.string.agent_addr), snippet));
 
         navigation.setOnClickListener(this);
-        call.setOnClickListener(this);
+        rent.setOnClickListener(this);
         return view;
     }
 
@@ -70,11 +71,10 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
         int id = v.getId();
         switch (id) {
             case R.id.navigation_LL:  //点击导航
-                //NavigationUtils.Navigation(latLng);
                 break;
 
-            case R.id.call_LL:  //点击打电话
-                //PhoneCallUtils.call("028-"); //TODO 处理电话号码
+            case R.id.rent_LL:  //点击租赁
+                Intent intent = new Intent();
                 break;
         }
     }

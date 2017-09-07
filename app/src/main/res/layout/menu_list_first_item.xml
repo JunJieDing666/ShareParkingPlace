@@ -2,9 +2,22 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="#fafafa"
     android:orientation="vertical"
-    android:paddingBottom="40dp"
-    android:background="#fafafa">
+    android:paddingBottom="40dp">
+
+    <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/profile_icon"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="35dp"
+        android:layout_marginTop="30dp"
+        android:src="@drawable/content_music"
+        app:civ_border_color="@color/border_clo"
+        app:civ_border_width="0.5dp" />
+
 
     <ImageView
         android:id="@+id/menu_item_image"
@@ -15,6 +28,7 @@
         android:layout_marginRight="12dp"
         android:layout_marginTop="12dp"
         android:background="@android:color/transparent" />
+
     <TextView
         android:id="@+id/menu_item_title"
         android:layout_width="0dp"
