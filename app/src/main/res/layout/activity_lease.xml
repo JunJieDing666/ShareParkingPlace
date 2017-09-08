@@ -15,13 +15,12 @@
             <TextView
                 style="@style/usertext"
                 android:layout_weight="0.22"
-                android:text="姓名" />
+                android:text="出租人" />
 
-            <EditText
-                android:id="@+id/user_name"
+            <TextView
+                android:id="@+id/lease_user_name"
                 style="@style/usertext"
                 android:layout_weight="0.78"
-                android:inputType="textPersonName"
                 android:text="" />
 
         </LinearLayout>
@@ -38,11 +37,10 @@
                 android:layout_weight="0.22"
                 android:text="费用/h" />
 
-            <EditText
-                android:id="@+id/user_cost"
+            <TextView
+                android:id="@+id/lease_user_cost"
                 style="@style/usertext"
                 android:layout_weight="0.78"
-                android:inputType="number"
                 android:text="" />
 
         </LinearLayout>
@@ -50,7 +48,6 @@
         <View style="@style/bg_line" />
         <!-- 下圆角-->
         <LinearLayout
-            android:id="@+id/ll_user_phone_num"
             style="@style/bottom_layout"
             android:weightSum="1">
 
@@ -59,11 +56,10 @@
                 android:layout_weight="0.22"
                 android:text="联系方式" />
 
-            <EditText
-                android:id="@+id/user_phone_num"
+            <TextView
+                android:id="@+id/lease_user_phone_num"
                 style="@style/usertext"
                 android:layout_weight="0.78"
-                android:inputType="phone"
                 android:text="" />
 
         </LinearLayout>
@@ -75,7 +71,6 @@
     <LinearLayout style="@style/wrap_layout">
 
         <LinearLayout
-            android:id="@+id/ll_user_plate_num"
             style="@style/single_layout"
             android:weightSum="1">
 
@@ -84,28 +79,12 @@
                 android:layout_weight="0.22"
                 android:text="车位地址" />
 
-            <EditText
-                android:id="@+id/user_park_addr"
+            <TextView
+                android:id="@+id/lease_user_park_addr"
                 style="@style/usertext"
                 android:layout_weight="0.78"
-                android:inputType="textPostalAddress"
                 android:text="" />
 
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- 全圆角-->
-    <LinearLayout style="@style/wrap_layout">
-
-        <LinearLayout
-            android:id="@+id/pick_address"
-            style="@style/single_layout">
-
-            <TextView
-                style="@style/usertext"
-                android:gravity="center"
-                android:text="前往选择位置" />
         </LinearLayout>
 
     </LinearLayout>
@@ -113,7 +92,7 @@
     <LinearLayout style="@style/wrap_layout">
         <!-- 上圆角-->
         <LinearLayout
-            android:id="@+id/ll_time_start"
+            android:id="@+id/ll_lease_time_start"
             style="@style/top_layout"
             android:orientation="horizontal"
             android:paddingBottom="0dp"
@@ -128,7 +107,7 @@
                 android:text="开始时间" />
 
             <TextView
-                android:id="@+id/time_start"
+                android:id="@+id/lease_time_start"
                 style="@style/usertext"
                 android:layout_height="48dp"
                 android:layout_weight="0.78"
@@ -142,7 +121,7 @@
         <View style="@style/bg_line" />
         <!-- 下圆角-->
         <LinearLayout
-            android:id="@+id/ll_time_end"
+            android:id="@+id/ll_lease_time_end"
             style="@style/bottom_layout"
             android:paddingBottom="0dp"
             android:paddingTop="0dp"
@@ -156,7 +135,7 @@
                 android:text="结束时间" />
 
             <TextView
-                android:id="@+id/time_end"
+                android:id="@+id/lease_time_end"
                 style="@style/usertext"
                 android:layout_height="48dp"
                 android:layout_weight="0.78"
@@ -168,14 +147,25 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/final_cost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="总费用：212元（12元+200元押金）"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:textSize="16sp"
+        android:textColor="#898989"/>
+
     <Button
-        android:id="@+id/rent_confirm_btn"
+        android:id="@+id/lease_confirm_btn"
         android:layout_width="220dp"
         android:layout_height="48dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp"
         android:background="@color/blue"
-        android:text="确认信息"
+        android:text="确认支付"
         android:textAlignment="center"
         android:textColor="@color/white"
         android:textSize="15sp" />

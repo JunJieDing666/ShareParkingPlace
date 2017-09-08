@@ -3,8 +3,6 @@ package com.jj.tidedemo.Realm;
 import java.util.Date;
 
 import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
-import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
 /**
@@ -14,8 +12,8 @@ import io.realm.annotations.Required;
 public class UserPark extends RealmObject {
     @Required
     private String name;
-    @Ignore
-    private String sex;
+    @Required
+    private String cost;
     @Required
     private String phone_num;
     @Required
@@ -35,12 +33,12 @@ public class UserPark extends RealmObject {
         this.name = name;
     }
 
-    public String getSex() {
-        return sex;
+    public String getCost() {
+        return cost;
     }
 
-    public void setSex(String sex) {
-        this.sex = sex;
+    public void setCost(String cost) {
+        this.cost = cost;
     }
 
     public String getPhone_num() {

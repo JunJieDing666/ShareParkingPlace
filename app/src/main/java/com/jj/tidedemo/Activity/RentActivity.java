@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -20,8 +19,6 @@ import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
-import io.realm.RealmQuery;
-import io.realm.RealmResults;
 
 /**
  * Created by Administrator on 2017/9/6.
@@ -44,8 +41,9 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
     private void initDB() {
         Realm.init(this);
         RealmConfiguration config = new RealmConfiguration.Builder()
-                .name("userpark.realm") //文件名
-                .schemaVersion(0) //版本号
+                .deleteRealmIfMigrationNeeded()
+                .name("userpark-1.realm") //文件名
+                .schemaVersion(1) //版本号
                 .build();
         mRealm = Realm.getInstance(config);
     }
@@ -107,6 +105,7 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
         TextView user_park_addr = (TextView) findViewById(R.id.user_park_addr);
         TextView time_start = (TextView) findViewById(R.id.time_start);
         TextView time_end = (TextView) findViewById(R.id.time_end);
+        TextView user_cost = (TextView) findViewById(R.id.user_cost);
         if (TextUtils.isEmpty(user_name.getText()) || TextUtils.isEmpty(user_phone_num.getText())
                 || TextUtils.isEmpty(user_park_addr.getText()) || TextUtils.isEmpty(time_start.getText())
                 || TextUtils.isEmpty(time_end.getText())) {
@@ -118,6 +117,8 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
             user.setName(user_name.getText().toString());
             user.setPhone_num(user_phone_num.getText().toString());
             user.setPark_addr(user_park_addr.getText().toString());
+            user.setCost(user_cost.getText().toString());
+            user.setQuality("rent");
             try {
                 user.setStart_time(mFormat.parse(time_start.getText().toString()));
                 user.setEnd_time(mFormat.parse(time_end.getText().toString()));
@@ -128,11 +129,12 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
             //返回主界面
             Intent intent = new Intent();
             Bundle bundle = new Bundle();
-            bundle.putString("park_addr",user_park_addr.getText().toString());
-            bundle.putString("start_time",time_start.getText().toString());
-            bundle.putString("end_time",time_end.getText().toString());
+            bundle.putString("park_addr", user_park_addr.getText().toString());
+            bundle.putString("start_time", time_start.getText().toString());
+            bundle.putString("end_time", time_end.getText().toString());
+            bundle.putString("cost", user_cost.getText().toString());
             intent.putExtras(bundle);
-            setResult(RESULT_OK,intent);
+            setResult(RESULT_OK, intent);
             finish();
         }
     }
@@ -144,13 +146,13 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        RealmResults<UserPark> all = mRealm.where(UserPark.class).findAll();
+        /*RealmResults<UserPark> all = mRealm.where(UserPark.class).findAll();
         for(UserPark user:all) {
             Log.i("Test",user.getStart_time().toString());
             Log.i("Test",user.getName());
             Log.i("Test",user.getPhone_num());
             Log.i("Test",user.getPark_addr());
-        }
-
+        }*/
+        mRealm.close();
     }
 }

@@ -360,8 +360,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         //反向地理编码
         geocodeSearch = new GeocodeSearch(this);
         geocodeSearch.setOnGeocodeSearchListener(this);
-        geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal)));
     }
 
     /**
@@ -721,6 +719,10 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        //让定位点无法点击
+        if (marker.getSnippet() == null || marker.getId() == "Marker1") {
+            return true;
+        }
         marker.showInfoWindow();
         aMap.moveCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
         if (oldMarker != null) {
@@ -836,15 +838,24 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 mCleanKeyWords.setVisibility(View.VISIBLE);
             }
         } else if (requestCode == REQUEST_RENT && resultCode == RESULT_OK) {
+            geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal)));
+            if (oldMarker != null) {
+                if (oldMarker.isInfoWindowShown()){
+                    oldMarker.hideInfoWindow();
+                    oldMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal));
+                }
+            }
             if (geoMarker.getPosition() != null) {
                 geoMarker.hideInfoWindow();
             }
             String parkAddr = data.getExtras().getString("park_addr");
             String start_time = data.getExtras().getString("start_time");
             String end_time = data.getExtras().getString("end_time");
+            String cost = data.getExtras().getString("cost");
             GeocodeQuery geocodeQuery = new GeocodeQuery(parkAddr, currentCity);
             geocodeSearch.getFromLocationNameAsyn(geocodeQuery);
-            geoMarker.setSnippet(parkAddr+"\n开始时间："+start_time+"\n结束时间："+end_time);
+            geoMarker.setSnippet(parkAddr+"\n开始时间：\t"+start_time+"\n结束时间：\t"+end_time+"\n单价：\t"+cost+"元/h");
         }
     }
 
@@ -913,10 +924,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 //设置点标记
                 geoMarker.setPosition(markerPosition);
                 geoMarker.setTitle("车位出租");
-                //弹出具体位置信息
-                String addressName = "经纬度值:" + address.getLatLonPoint() + "\n位置描述:"
-                        + address.getFormatAddress();
-                ToastUtil.show(this, addressName);
             } else {
                 ToastUtil.show(this, "没有查询到结果！");
             }

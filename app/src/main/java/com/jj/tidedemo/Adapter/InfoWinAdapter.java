@@ -2,7 +2,9 @@ package com.jj.tidedemo.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -11,7 +13,14 @@ import android.widget.TextView;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
+import com.jj.tidedemo.Activity.LeaseInfoActivity;
 import com.jj.tidedemo.R;
+import com.jj.tidedemo.Realm.UserPark;
+import com.jj.tidedemo.Utils.ToastUtil;
+
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 
 /**
  * Created by Administrator on 2017/9/4.
@@ -74,8 +83,17 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
                 break;
 
             case R.id.rent_LL:  //点击租赁
-                Intent intent = new Intent();
+                if (agentName == "车位出租"){
+                    Intent intent = new Intent(mContext, LeaseInfoActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("park_info",snippet);
+                    intent.putExtras(bundle);
+                    mContext.startActivity(intent);
+                } else {
+                    ToastUtil.show(mContext,"请选择正确车位");
+                }
                 break;
         }
     }
+
 }
