@@ -19,6 +19,7 @@ import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 
 /**
  * Created by Administrator on 2017/9/6.
@@ -29,6 +30,7 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
     private TimePickerView mPvTime;
     private Realm mRealm;
     private SimpleDateFormat mFormat;
+    private UserPark mUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,23 +114,28 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
             ToastUtil.show(this, "请将信息填写完整");
         } else {
             //将用户发布的停车位信息记录进数据库
+            RealmResults<UserPark> all = mRealm.where(UserPark.class).findAll();
+            //以此为主键的值，让其自增
+            int size = all.size();
             mRealm.beginTransaction();
-            UserPark user = mRealm.createObject(UserPark.class);
-            user.setName(user_name.getText().toString());
-            user.setPhone_num(user_phone_num.getText().toString());
-            user.setPark_addr(user_park_addr.getText().toString());
-            user.setCost(user_cost.getText().toString());
-            user.setQuality("rent");
+            mUser = mRealm.createObject(UserPark.class, size + 1);
+            mUser.setName(user_name.getText().toString());
+            mUser.setPhone_num(user_phone_num.getText().toString());
+            mUser.setPark_addr(user_park_addr.getText().toString());
+            mUser.setCost(user_cost.getText().toString());
+            mUser.setQuality("rent");
             try {
-                user.setStart_time(mFormat.parse(time_start.getText().toString()));
-                user.setEnd_time(mFormat.parse(time_end.getText().toString()));
+                mUser.setStart_time(mFormat.parse(time_start.getText().toString()));
+                mUser.setEnd_time(mFormat.parse(time_end.getText().toString()));
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
             mRealm.commitTransaction();
             //返回主界面
             Intent intent = new Intent();
             Bundle bundle = new Bundle();
+            bundle.putInt("id", size + 1);
             bundle.putString("park_addr", user_park_addr.getText().toString());
             bundle.putString("start_time", time_start.getText().toString());
             bundle.putString("end_time", time_end.getText().toString());
@@ -152,7 +159,10 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
             Log.i("Test",user.getName());
             Log.i("Test",user.getPhone_num());
             Log.i("Test",user.getPark_addr());
+            Log.i("Test", String.valueOf(user.getLat()));
+            Log.i("Test", String.valueOf(user.getLon()));
         }*/
         mRealm.close();
     }
+
 }

@@ -42,10 +42,13 @@ import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
+import com.amap.api.services.core.AMapException;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.core.SuggestionCity;
@@ -62,6 +65,7 @@ import com.jj.tidedemo.Fragment.ContentFragment;
 import com.jj.tidedemo.Interface.Resourceble;
 import com.jj.tidedemo.Overlay.PoiOverlay;
 import com.jj.tidedemo.R;
+import com.jj.tidedemo.Realm.UserPark;
 import com.jj.tidedemo.Utils.ConstantValue;
 import com.jj.tidedemo.Utils.Md5Utils;
 import com.jj.tidedemo.Utils.PermissionsHelper.PermissionsHelper;
@@ -71,15 +75,23 @@ import com.jj.tidedemo.Utils.ToastUtil;
 import com.jj.tidedemo.Utils.ViewAnimator;
 import com.jj.tidedemo.View.SlideMenuItem;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import cn.smssdk.EventHandler;
 import cn.smssdk.SMSSDK;
 import cn.smssdk.gui.RegisterPage;
 import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 import yalantis.com.sidemenu.interfaces.ScreenShotable;
 
 /**
@@ -144,7 +156,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
 
     //短信验证所用到的变量
     private EventHandler eventHandler;
-    private String userPhoneCountry;
     private String userPhoneNum;
     Handler handler = new Handler() {
         @Override
@@ -164,6 +175,18 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
     private Button mRentBtn;
     private GeocodeSearch geocodeSearch;
     private Marker geoMarker;
+    private Realm mRealm;
+    private String query_park_addr;
+    private String query_start_time;
+    private String query_end_time;
+    private String query_cost;
+    private String parkAddr;
+    private String start_time;
+    private String end_time;
+    private String cost;
+    private int id;
+    private SimpleDateFormat mFormat;
+    private Circle mCircle;
 
     /*----------------------------获取权限-----------------------------------------------------------*/
     private void checkPermissions() {
@@ -175,7 +198,8 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             //申请权限
             permissionsHelper.startRequestNeedPermissions();
         }
-        permissionsHelper.setonAllNeedPermissionsGrantedListener(new PermissionsHelper.onAllNeedPermissionsGrantedListener() {
+        permissionsHelper.setonAllNeedPermissionsGrantedListener(new PermissionsHelper
+                .onAllNeedPermissionsGrantedListener() {
             @Override
             public void onAllNeedPermissionsGranted() {
                 //全部许可了,已经获得了所有权限
@@ -225,6 +249,43 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         initSlideMenu();
         //初始化短信验证
         initSMSSDK();
+        //初始化数据库里的停车位点标注
+        initPoint();
+    }
+
+    private void initPoint() {
+        //初始化数据库
+        Realm.init(this);
+        RealmConfiguration config = new RealmConfiguration.Builder()
+                .deleteRealmIfMigrationNeeded()
+                .name("userpark-1.realm") //文件名
+                .schemaVersion(1)//版本号
+                .build();
+        mRealm = Realm.getInstance(config);
+        /*//获取所有记录，并将方圆一千米内的停车位显示在地图上
+        RealmResults<UserPark> allPoints = mRealm.where(UserPark.class).findAll();
+        for (UserPark user : allPoints) {
+            geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal)));
+            query_park_addr = user.getPark_addr();
+            mFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            query_start_time = mFormat.format(user.getStart_time());
+            query_end_time = mFormat.format(user.getEnd_time());
+            query_cost = user.getCost();
+            double query_lat = user.getLat();
+            double query_lon = user.getLon();
+            LatLng latLng = new LatLng(query_lat, query_lon);
+            if (mCircle.contains(latLng)){
+                Log.i("Test", query_park_addr);
+                Log.i("Test", latLng.toString());
+                geoMarker.setPosition(latLng);
+                geoMarker.setTitle("车位出租");
+                geoMarker.setSnippet(query_park_addr + "\n开始时间：\t" + query_start_time + "\n结束时间：\t"
+                        + query_end_time + "\n单价：\t" + query_cost + "元/h");
+            } else {
+                Log.i("Test","不在500米内");
+            }
+        }*/
     }
 
     private void initSMSSDK() {
@@ -336,11 +397,10 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         // 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
         aMap.setMyLocationEnabled(true);
         // 设置定位的类型为定位模式，有定位、跟随或地图根据面向方向旋转几种
-        //aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
         MyLocationStyle myLocationStyle;
         myLocationStyle = new MyLocationStyle();//初始化定位蓝点样式类myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);//连续定位、且将视角移动到地图中心点，定位点依照设备方向旋转，并且会跟随设备移动。（1秒1次定位）如果不设置myLocationType，默认也会执行此种模式。
         myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER);
-        myLocationStyle.interval(2000); //设置连续定位模式下的定位间隔，只在连续定位模式下生效，单次定位模式下不会生效。单位为毫秒。
+        myLocationStyle.interval(5000); //设置连续定位模式下的定位间隔，只在连续定位模式下生效，单次定位模式下不会生效。单位为毫秒。
         aMap.setMyLocationStyle(myLocationStyle);//设置定位蓝点的Style
 
         //初始化地图UI控件
@@ -357,7 +417,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         mRentBtn = (Button) findViewById(R.id.rent_btn);
         mRentBtn.setOnClickListener(this);
 
-        //反向地理编码
+        //地理编码
         geocodeSearch = new GeocodeSearch(this);
         geocodeSearch.setOnGeocodeSearchListener(this);
     }
@@ -437,7 +497,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                             if (result == SMSSDK.RESULT_COMPLETE) {
                                 @SuppressWarnings("unchecked")
                                 HashMap<String, Object> phoneMap = (HashMap<String, Object>) data;
-                                userPhoneCountry = (String) phoneMap.get("country");
                                 userPhoneNum = (String) phoneMap.get("phone");
                                 //验证成功后把记录用户号码
                                 SpUtils.putString(getApplicationContext(), ConstantValue.USER_PHONE_NUM, userPhoneNum);
@@ -605,7 +664,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                                 //获取定位信息
                                 currentDistrict = amapLocation.getDistrict();
                                 currentCity = amapLocation.getCity();
-                                aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 17));
+                                aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon), 15));
                                 isFirstLoc = false;
                             }
                         } else {
@@ -643,6 +702,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         super.onDestroy();
         //在activity执行onDestroy时执行mMapView.onDestroy()，实现地图生命周期管理
         mMapView.onDestroy();
+        mRealm.close();
         SMSSDK.unregisterEventHandler(eventHandler);
     }
 
@@ -822,6 +882,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 doSearchQuery(tip.getName());
             } else {
                 addTipMarker(tip);
+                addPointsAround();
             }
             mKeywordsTextView.setText(tip.getName());
             if (!tip.getName().equals("")) {
@@ -841,7 +902,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal)));
             if (oldMarker != null) {
-                if (oldMarker.isInfoWindowShown()){
+                if (oldMarker.isInfoWindowShown()) {
                     oldMarker.hideInfoWindow();
                     oldMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal));
                 }
@@ -849,13 +910,42 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             if (geoMarker.getPosition() != null) {
                 geoMarker.hideInfoWindow();
             }
-            String parkAddr = data.getExtras().getString("park_addr");
-            String start_time = data.getExtras().getString("start_time");
-            String end_time = data.getExtras().getString("end_time");
-            String cost = data.getExtras().getString("cost");
+            id = data.getExtras().getInt("id");
+            parkAddr = data.getExtras().getString("park_addr");
+            start_time = data.getExtras().getString("start_time");
+            end_time = data.getExtras().getString("end_time");
+            cost = data.getExtras().getString("cost");
+            //地理编码获取新加停车位的经纬度
             GeocodeQuery geocodeQuery = new GeocodeQuery(parkAddr, currentCity);
             geocodeSearch.getFromLocationNameAsyn(geocodeQuery);
-            geoMarker.setSnippet(parkAddr+"\n开始时间：\t"+start_time+"\n结束时间：\t"+end_time+"\n单价：\t"+cost+"元/h");
+            geoMarker.setSnippet(parkAddr + "\n开始时间：\t" + start_time + "\n结束时间：\t" + end_time + "\n单价：\t" + cost + "元/h");
+        }
+    }
+
+    private void addPointsAround() {
+        //获取所有记录，并将方圆一千米内的停车位显示在地图上
+        RealmResults<UserPark> allPoints = mRealm.where(UserPark.class).findAll();
+        for (UserPark user : allPoints) {
+            geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal)));
+            query_park_addr = user.getPark_addr();
+            mFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            query_start_time = mFormat.format(user.getStart_time());
+            query_end_time = mFormat.format(user.getEnd_time());
+            query_cost = user.getCost();
+            double query_lat = user.getLat();
+            double query_lon = user.getLon();
+            LatLng latLng = new LatLng(query_lat, query_lon);
+            if (mCircle.contains(latLng)){
+                Log.i("Test", query_park_addr);
+                Log.i("Test", latLng.toString());
+                geoMarker.setPosition(latLng);
+                geoMarker.setTitle("车位出租");
+                geoMarker.setSnippet(query_park_addr + "\n开始时间：\t" + query_start_time + "\n结束时间：\t"
+                        + query_end_time + "\n单价：\t" + query_cost + "元/h");
+            } else {
+                Log.i("Test","不在500米内");
+            }
         }
     }
 
@@ -873,7 +963,9 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
         if (point != null) {
             LatLng markerPosition = new LatLng(point.getLatitude(), point.getLongitude());
             mPoiMarker.setPosition(markerPosition);
-            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 16));
+            mCircle = aMap.addCircle(new CircleOptions().center(markerPosition)
+                    .radius(2000).strokeColor(Color.argb(0,0,0,0)));
+            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 15));
         }
         mPoiMarker.setTitle(tip.getName());
         mPoiMarker.setSnippet(tip.getAddress());
@@ -920,6 +1012,18 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 //转化为经纬度，并包装起来
                 LatLonPoint latLonPoint = address.getLatLonPoint();
                 LatLng markerPosition = new LatLng(latLonPoint.getLatitude(), latLonPoint.getLongitude());
+                //给数据库中新加的停车位添加经纬度
+                mRealm.beginTransaction();
+                UserPark first_res = mRealm.where(UserPark.class).equalTo("park_addr", parkAddr)
+                        .equalTo("id",id)
+                        .equalTo("cost", cost)
+                        .findFirst();
+                if (first_res != null){
+                    Log.i("Test", String.valueOf(first_res.getId()));
+                    first_res.setLat(latLonPoint.getLatitude());
+                    first_res.setLon(latLonPoint.getLongitude());
+                }
+                mRealm.commitTransaction();
                 aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 15));
                 //设置点标记
                 geoMarker.setPosition(markerPosition);

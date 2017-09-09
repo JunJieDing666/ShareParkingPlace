@@ -3,6 +3,7 @@ package com.jj.tidedemo.Realm;
 import java.util.Date;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
 /**
@@ -10,6 +11,8 @@ import io.realm.annotations.Required;
  */
 
 public class UserPark extends RealmObject {
+    @PrimaryKey
+    private int id;
     @Required
     private String name;
     @Required
@@ -24,6 +27,33 @@ public class UserPark extends RealmObject {
     private Date end_time;
     @Required
     private String quality;
+    private double lat;
+    private double lon;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public void setLon(double lon) {
+        this.lon = lon;
+    }
+
 
     public String getName() {
         return name;
