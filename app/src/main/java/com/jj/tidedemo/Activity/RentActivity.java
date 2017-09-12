@@ -130,7 +130,6 @@ public class RentActivity extends AppCompatActivity implements View.OnClickListe
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
             mRealm.commitTransaction();
             //返回主界面
             Intent intent = new Intent();

@@ -1,5 +1,6 @@
 package com.jj.tidedemo.Adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,6 +28,7 @@ import io.realm.RealmResults;
  */
 
 public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListener {
+    private static final int REQUEST_LEASE = 1;
     private Context mContext;
     private LatLng latLng;
     private LinearLayout rent;
@@ -88,7 +90,7 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
                     Bundle bundle = new Bundle();
                     bundle.putString("park_info",snippet);
                     intent.putExtras(bundle);
-                    mContext.startActivity(intent);
+                    ((Activity) mContext).startActivityForResult(intent,REQUEST_LEASE);
                 } else {
                     ToastUtil.show(mContext,"请选择正确车位");
                 }

@@ -1,6 +1,5 @@
 package com.jj.tidedemo.Activity;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -9,6 +8,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
@@ -30,7 +30,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.os.Handler;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -48,7 +47,6 @@ import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
-import com.amap.api.services.core.AMapException;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
 import com.amap.api.services.core.SuggestionCity;
@@ -75,14 +73,10 @@ import com.jj.tidedemo.Utils.ToastUtil;
 import com.jj.tidedemo.Utils.ViewAnimator;
 import com.jj.tidedemo.View.SlideMenuItem;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import cn.smssdk.EventHandler;
 import cn.smssdk.SMSSDK;
@@ -101,7 +95,6 @@ import yalantis.com.sidemenu.interfaces.ScreenShotable;
 public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickListener, LocationSource,
         ViewAnimator.ViewAnimatorListener, AMap.OnMarkerClickListener, PoiSearch.OnPoiSearchListener,
         View.OnClickListener, GeocodeSearch.OnGeocodeSearchListener {
-    private static final int REQUEST_RENT = 0;
     //地图定位所使用到的变量
     private MapView mMapView;
     private AMap aMap;
@@ -131,6 +124,8 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
     public static final int REQUEST_CODE = 100;
     public static final int RESULT_CODE_INPUTTIPS = 101;
     public static final int RESULT_CODE_KEYWORDS = 102;
+    private static final int REQUEST_RENT = 0;
+    private static final int REQUEST_LEASE = 1;
 
     // app所需要的全部危险权限
     static final String[] PERMISSIONS = new String[]{
@@ -187,6 +182,9 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
     private int id;
     private SimpleDateFormat mFormat;
     private Circle mCircle;
+    private int query_id;
+    private String query_quality;
+
 
     /*----------------------------获取权限-----------------------------------------------------------*/
     private void checkPermissions() {
@@ -262,30 +260,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 .schemaVersion(1)//版本号
                 .build();
         mRealm = Realm.getInstance(config);
-        /*//获取所有记录，并将方圆一千米内的停车位显示在地图上
-        RealmResults<UserPark> allPoints = mRealm.where(UserPark.class).findAll();
-        for (UserPark user : allPoints) {
-            geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_normal)));
-            query_park_addr = user.getPark_addr();
-            mFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-            query_start_time = mFormat.format(user.getStart_time());
-            query_end_time = mFormat.format(user.getEnd_time());
-            query_cost = user.getCost();
-            double query_lat = user.getLat();
-            double query_lon = user.getLon();
-            LatLng latLng = new LatLng(query_lat, query_lon);
-            if (mCircle.contains(latLng)){
-                Log.i("Test", query_park_addr);
-                Log.i("Test", latLng.toString());
-                geoMarker.setPosition(latLng);
-                geoMarker.setTitle("车位出租");
-                geoMarker.setSnippet(query_park_addr + "\n开始时间：\t" + query_start_time + "\n结束时间：\t"
-                        + query_end_time + "\n单价：\t" + query_cost + "元/h");
-            } else {
-                Log.i("Test","不在500米内");
-            }
-        }*/
     }
 
     private void initSMSSDK() {
@@ -664,7 +638,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                                 //获取定位信息
                                 currentDistrict = amapLocation.getDistrict();
                                 currentCity = amapLocation.getCity();
-                                aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon), 15));
+                                aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 15));
                                 isFirstLoc = false;
                             }
                         } else {
@@ -918,12 +892,35 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             //地理编码获取新加停车位的经纬度
             GeocodeQuery geocodeQuery = new GeocodeQuery(parkAddr, currentCity);
             geocodeSearch.getFromLocationNameAsyn(geocodeQuery);
-            geoMarker.setSnippet(parkAddr + "\n开始时间：\t" + start_time + "\n结束时间：\t" + end_time + "\n单价：\t" + cost + "元/h");
+            geoMarker.setSnippet(parkAddr + "\n开始时间：\t" + start_time + "\n结束时间：\t"
+                    + end_time + "\n单价：\t" + cost + "元/h" + "\n车位编号：\t" + id);
+        } else if (requestCode == REQUEST_LEASE && resultCode == RESULT_OK) {
+            //当把车位出租出去后，移除地图上的该车位
+            String from_lease_info_id = data.getExtras().getString("from_lease_info_id");
+            List<Marker> mapScreenMarkers = aMap.getMapScreenMarkers();
+            Log.i("Test", String.valueOf(mapScreenMarkers.size()));
+            for (Marker marker : mapScreenMarkers) {
+                //判断出事哪个车位出租了
+                String temp_snippet = marker.getSnippet();
+                //剔除内容为空的点标注
+                if (temp_snippet != null) {
+                    String[] snippet_infos = temp_snippet.split("\n");
+                    //匹配id
+                    if (snippet_infos.length >= 5) {
+                        if (snippet_infos[4].equals(from_lease_info_id)) {
+                            marker.remove();
+                        }
+                    }
+                }
+            }
         }
     }
 
+    /*
+    *   将搜索点附近1500m内的出租停车位添加到地图上
+    * */
     private void addPointsAround() {
-        //获取所有记录，并将方圆一千米内的停车位显示在地图上
+        //获取所有记录，并将方圆一千五百米内的停车位显示在地图上
         RealmResults<UserPark> allPoints = mRealm.where(UserPark.class).findAll();
         for (UserPark user : allPoints) {
             geoMarker = aMap.addMarker(new MarkerOptions().anchor(0.5f, 0.5f)
@@ -933,18 +930,22 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             query_start_time = mFormat.format(user.getStart_time());
             query_end_time = mFormat.format(user.getEnd_time());
             query_cost = user.getCost();
+            query_id = user.getId();
+            query_quality = user.getQuality();
             double query_lat = user.getLat();
             double query_lon = user.getLon();
             LatLng latLng = new LatLng(query_lat, query_lon);
-            if (mCircle.contains(latLng)){
+            //显示1500m内未租出的车位
+            if (mCircle.contains(latLng) && !query_quality.equals("lease")) {
                 Log.i("Test", query_park_addr);
                 Log.i("Test", latLng.toString());
+                Log.i("Test", query_quality);
                 geoMarker.setPosition(latLng);
                 geoMarker.setTitle("车位出租");
                 geoMarker.setSnippet(query_park_addr + "\n开始时间：\t" + query_start_time + "\n结束时间：\t"
-                        + query_end_time + "\n单价：\t" + query_cost + "元/h");
+                        + query_end_time + "\n单价：\t" + query_cost + "元/h" + "\n车位编号：\t" + query_id);
             } else {
-                Log.i("Test","不在500米内");
+                Log.i("Test", "不在1500米内或已租出");
             }
         }
     }
@@ -964,8 +965,8 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             LatLng markerPosition = new LatLng(point.getLatitude(), point.getLongitude());
             mPoiMarker.setPosition(markerPosition);
             mCircle = aMap.addCircle(new CircleOptions().center(markerPosition)
-                    .radius(2000).strokeColor(Color.argb(0,0,0,0)));
-            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 15));
+                    .radius(1500).strokeColor(Color.argb(0, 0, 0, 0)));
+            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerPosition, 14));
         }
         mPoiMarker.setTitle(tip.getName());
         mPoiMarker.setSnippet(tip.getAddress());
@@ -1015,11 +1016,10 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                 //给数据库中新加的停车位添加经纬度
                 mRealm.beginTransaction();
                 UserPark first_res = mRealm.where(UserPark.class).equalTo("park_addr", parkAddr)
-                        .equalTo("id",id)
+                        .equalTo("id", id)
                         .equalTo("cost", cost)
                         .findFirst();
-                if (first_res != null){
-                    Log.i("Test", String.valueOf(first_res.getId()));
+                if (first_res != null) {
                     first_res.setLat(latLonPoint.getLatitude());
                     first_res.setLon(latLonPoint.getLongitude());
                 }

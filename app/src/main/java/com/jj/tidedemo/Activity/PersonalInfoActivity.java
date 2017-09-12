@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ public class PersonalInfoActivity extends AppCompatActivity {
         LinearLayout ll_user_phone_num = (LinearLayout) findViewById(R.id.ll_user_phone_num);
         LinearLayout ll_user_plate_num = (LinearLayout) findViewById(R.id.ll_user_plate_num);
         ImageView profile_image = (ImageView) findViewById(R.id.profile_image);
+        Button quit_btn = (Button) findViewById(R.id.quit_btn);
         //读入用户手机号
         user_phone_num.setText(spUserPhone);
 
@@ -55,6 +57,14 @@ public class PersonalInfoActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+            }
+        });
+
+        quit_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SpUtils.putString(getApplicationContext(), ConstantValue.USER_PHONE_NUM, "");
+                PersonalInfoActivity.this.finish();
             }
         });
     }

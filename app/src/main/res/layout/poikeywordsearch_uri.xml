@@ -29,7 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="70dp"
             android:textSize="12sp"
-            android:lines="4"
+            android:lines="5"
             android:ellipsize="end"
             android:textColor="@color/black_text2"/>
 

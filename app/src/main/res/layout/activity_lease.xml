@@ -92,7 +92,6 @@
     <LinearLayout style="@style/wrap_layout">
         <!-- 上圆角-->
         <LinearLayout
-            android:id="@+id/ll_lease_time_start"
             style="@style/top_layout"
             android:orientation="horizontal"
             android:paddingBottom="0dp"
@@ -105,6 +104,61 @@
                 android:height="48dp"
                 android:gravity="center_vertical"
                 android:text="开始时间" />
+
+            <TextView
+                android:id="@+id/confirm_time_start"
+                style="@style/usertext"
+                android:layout_height="48dp"
+                android:layout_weight="0.78"
+                android:gravity="center_vertical"
+                android:text="" />
+
+        </LinearLayout>
+
+        <!-- 分割线 -->
+        <View style="@style/bg_line" />
+        <!-- 下圆角-->
+        <LinearLayout
+            style="@style/bottom_layout"
+            android:paddingBottom="0dp"
+            android:paddingTop="0dp"
+            android:weightSum="1">
+
+            <TextView
+                style="@style/usertext"
+                android:layout_height="48dp"
+                android:layout_weight="0.22"
+                android:gravity="center_vertical"
+                android:text="结束时间" />
+
+            <TextView
+                android:id="@+id/confirm_time_end"
+                style="@style/usertext"
+                android:layout_height="48dp"
+                android:layout_weight="0.78"
+                android:gravity="center_vertical"
+                android:text="" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout style="@style/wrap_layout">
+        <!-- 上圆角-->
+        <LinearLayout
+            android:id="@+id/ll_lease_time_start"
+            style="@style/top_layout"
+            android:orientation="horizontal"
+            android:paddingBottom="0dp"
+            android:paddingTop="0dp"
+            android:weightSum="1">
+
+            <TextView
+                style="@style/usertext"
+                android:layout_weight="0.22"
+                android:height="48dp"
+                android:gravity="center_vertical"
+                android:text="租赁开始" />
 
             <TextView
                 android:id="@+id/lease_time_start"
@@ -132,7 +186,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="0.22"
                 android:gravity="center_vertical"
-                android:text="结束时间" />
+                android:text="租赁结束" />
 
             <TextView
                 android:id="@+id/lease_time_end"
@@ -151,7 +205,7 @@
         android:id="@+id/final_cost"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="总费用：212元（12元+200元押金）"
+        android:text="总费用："
         android:layout_marginLeft="12dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"

@@ -7,6 +7,7 @@ repositories {
     flatDir{
         dirs 'libs' //就是你放aar的目录地址
     }
+    mavenCentral()
 }
 android {
     compileSdkVersion 23
@@ -50,4 +51,6 @@ dependencies {
     compile 'de.hdodenhof:circleimageview:2.1.0'
     //时间选择器
     compile 'com.contrarywind:Android-PickerView:3.2.6'
+    //对话框
+    compile 'cn.pedant.sweetalert:library:1.3'
 }
