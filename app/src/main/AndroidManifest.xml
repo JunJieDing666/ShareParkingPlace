@@ -51,6 +51,7 @@
         <activity android:name=".Activity.PersonalInfoActivity"/>
         <activity android:name=".Activity.RentActivity"/>
         <activity android:name=".Activity.LeaseInfoActivity"/>
+        <activity android:name=".Activity.RouteNaviActivity"/>
         <activity
             android:name="com.mob.tools.MobUIShell"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"

@@ -11,10 +11,13 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.amap.api.location.AMapLocation;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
+import com.amap.api.navi.model.NaviLatLng;
 import com.jj.tidedemo.Activity.LeaseInfoActivity;
+import com.jj.tidedemo.Activity.RouteNaviActivity;
 import com.jj.tidedemo.R;
 import com.jj.tidedemo.Realm.UserPark;
 import com.jj.tidedemo.Utils.ToastUtil;
@@ -30,6 +33,7 @@ import io.realm.RealmResults;
 public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListener {
     private static final int REQUEST_LEASE = 1;
     private Context mContext;
+    private AMapLocation mCurrentLocation;
     private LatLng latLng;
     private LinearLayout rent;
     private LinearLayout navigation;
@@ -37,6 +41,14 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
     private String agentName;
     private TextView addrTV;
     private String snippet;
+
+    public AMapLocation getmCurrentLocation() {
+        return mCurrentLocation;
+    }
+
+    public void setmCurrentLocation(AMapLocation mCurrentLocation) {
+        this.mCurrentLocation = mCurrentLocation;
+    }
 
     public InfoWinAdapter(Context context) {
         this.mContext = context;
@@ -82,8 +94,8 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
         int id = v.getId();
         switch (id) {
             case R.id.navigation_LL:  //点击导航
+                startAMapNavi();
                 break;
-
             case R.id.rent_LL:  //点击租赁
                 if (agentName == "车位出租"){
                     Intent intent = new Intent(mContext, LeaseInfoActivity.class);
@@ -96,6 +108,17 @@ public class InfoWinAdapter implements AMap.InfoWindowAdapter, View.OnClickListe
                 }
                 break;
         }
+    }
+
+    private void startAMapNavi() {
+        if (mCurrentLocation == null) {
+            return;
+        }
+        Intent intent = new Intent(mContext, RouteNaviActivity.class);
+        intent.putExtra("gps", true);
+        intent.putExtra("start", new NaviLatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+        intent.putExtra("end", new NaviLatLng(latLng.latitude, latLng.longitude));
+        mContext.startActivity(intent);
     }
 
 }

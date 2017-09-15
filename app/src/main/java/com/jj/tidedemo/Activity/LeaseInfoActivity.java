@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -222,11 +221,12 @@ public class LeaseInfoActivity extends Activity implements View.OnClickListener 
                                             .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                                 @Override
                                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                                    //传递消息让地图上刚被出租的车位标注移除
                                                     Intent intent = new Intent();
                                                     Bundle bundle = new Bundle();
-                                                    bundle.putString("from_lease_info_id",infos[4]);
+                                                    bundle.putString("from_lease_info_id", infos[4]);
                                                     intent.putExtras(bundle);
-                                                    setResult(RESULT_OK,intent);
+                                                    setResult(RESULT_OK, intent);
                                                     LeaseInfoActivity.this.finish();
                                                 }
                                             })

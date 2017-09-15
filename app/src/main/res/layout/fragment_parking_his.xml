@@ -20,18 +20,23 @@
                 android:layout_height="0dp"
                 android:layout_weight="0.09"
                 android:background="@android:color/transparent"
-                android:text="停车历史"
                 android:gravity="center"
-                android:textSize="20sp"
+                android:text="停车历史"
                 android:textColor="#000000"
-                />
+                android:textSize="20sp" />
 
-            <ImageView
-                android:id="@+id/image_content"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.91"
-                android:background="@drawable/content_films" />
+                android:layout_weight="0.91">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+            </RelativeLayout>
+
 
         </LinearLayout>
 

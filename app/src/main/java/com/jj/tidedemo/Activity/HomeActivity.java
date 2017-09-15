@@ -94,7 +94,7 @@ import yalantis.com.sidemenu.interfaces.ScreenShotable;
 
 public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickListener, LocationSource,
         ViewAnimator.ViewAnimatorListener, AMap.OnMarkerClickListener, PoiSearch.OnPoiSearchListener,
-        View.OnClickListener, GeocodeSearch.OnGeocodeSearchListener {
+        View.OnClickListener, GeocodeSearch.OnGeocodeSearchListener{
     //地图定位所使用到的变量
     private MapView mMapView;
     private AMap aMap;
@@ -184,6 +184,7 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
     private Circle mCircle;
     private int query_id;
     private String query_quality;
+    private AMapLocation mCurrentLocation;
 
 
     /*----------------------------获取权限-----------------------------------------------------------*/
@@ -631,6 +632,8 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
                         if (amapLocation != null
                                 && amapLocation.getErrorCode() == 0) {
                             mListener.onLocationChanged(amapLocation);// 显示系统小蓝点
+                            mCurrentLocation = amapLocation;
+                            adapter.setmCurrentLocation(amapLocation);
                             lat = amapLocation.getLatitude();//获取纬度
                             lon = amapLocation.getLongitude();//获取经度
                             // 如果不设置标志位，此时再拖动地图时，它会不断将地图移动到当前的位置
@@ -898,7 +901,6 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             //当把车位出租出去后，移除地图上的该车位
             String from_lease_info_id = data.getExtras().getString("from_lease_info_id");
             List<Marker> mapScreenMarkers = aMap.getMapScreenMarkers();
-            Log.i("Test", String.valueOf(mapScreenMarkers.size()));
             for (Marker marker : mapScreenMarkers) {
                 //判断出事哪个车位出租了
                 String temp_snippet = marker.getSnippet();
@@ -937,9 +939,9 @@ public class HomeActivity extends AppCompatActivity implements AMap.OnMapClickLi
             LatLng latLng = new LatLng(query_lat, query_lon);
             //显示1500m内未租出的车位
             if (mCircle.contains(latLng) && !query_quality.equals("lease")) {
-                Log.i("Test", query_park_addr);
+               /* Log.i("Test", query_park_addr);
                 Log.i("Test", latLng.toString());
-                Log.i("Test", query_quality);
+                Log.i("Test", query_quality);*/
                 geoMarker.setPosition(latLng);
                 geoMarker.setTitle("车位出租");
                 geoMarker.setSnippet(query_park_addr + "\n开始时间：\t" + query_start_time + "\n结束时间：\t"
