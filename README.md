@@ -26,4 +26,3 @@ An App of sharing citizens parking place.
 * 7）查找并显示停车位（地图上直接显示附近所有停车位）
 * 8）出租车位
 * 9）预约并租赁车位
-
