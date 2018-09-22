@@ -1,5 +1,5 @@
 # ShareParkingPlace
-An App of sharing citizens parking place.
+An Android app of sharing citizens parking place.
 
 &emsp;&emsp;随着城市经济的快速发展和城市现代化水平的不断提高，在许多城市人均机动车保有量呈现爆发式增长。由此带来的交通拥堵、停车困难以及停车费用较高已经成为困扰市民的一个出行的一个严重问题，人们经常会出现开车出行却无法找到停车位的“停车难”问题。
 
